@@ -17,6 +17,13 @@ In this demo we will :
 - rbac role for that user 
 - testing the permissions for that user.
 
+## How to read the console output
+```
+~/github/rbac-demo  master ✗ system    <-- Directory in which the command was executed from                                                                                                                                                                                               19m ⚑ ✚ ◒  
+▶ openssl version                      <-- Command that is execute                                                                                                                                
+LibreSSL 2.6.5                         <-- Output from the command
+```
+
 ## Items you will need to complete this demo
 - IDE or Text Editor (Recommend VSCode or Atom)
 - Docker Desktop Installed with Kubernetes Enabled
@@ -333,9 +340,50 @@ github/rbac-demo/rbac-fullperms  master ✗ system                              
 ▶ kubectl delete deployment my-nginx --namespace georges-awesome-app
 deployment.extensions "my-nginx" deleted
 ```
+
+### Explaining the files
+
+First lets make a note that RBAC is inclusive and not exclusive. In English means you can not say all but this, you can only say just this..
+
+Role YAML
+```
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  namespace: default <-- namespace the role is bound 
+  name: readonly <-- name of the role , to be user in the role binding
+rules:
+  - apiGroups: ["*"] <-- API group access "*" all apis
+    resources: ["*"] <-- Resource access examples, pods, configmaps ect.. and sub resources such as pod/logs
+    verbs: ["get", "list", "watch"] <-- what actions are allowed against the resources and api
+```
+
+Role Binding YAML
+```
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: readonly-role-binding <-- name of the binding
+  namespace: default <-- namespace the role is bound needs to match the role
+subjects:
+  - kind: User <-- what is it binding to, could be serviceaccount pending your setup
+    name: george <-- name of the bind, in this case matches our cert CN of George
+    apiGroup: "" <-- api Group see RBAC docs for more information, but for users it is always ""
+roleRef:
+  kind: Role <-- can be cluster role or role
+  name: readonly <-- name of the role , from the above role yaml
+  apiGroup: "" <-- api Group see RBAC docs for more information
+
+```
+
 ## Cluster Role
 
 ## Terraform Automation
+
+## Task List
+    - [ ] Add Cluster Role demo
+    - [ ] Add Terraform Automation docs
+    
 
 ## Outside links for reference
 [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
