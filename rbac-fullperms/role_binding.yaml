@@ -1,0 +1,13 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: fullperms-role-binding
+  namespace: georges-awesome-app
+subjects:
+  - kind: User
+    name: george
+    apiGroup: ""
+roleRef:
+  kind: Role
+  name: fullperms
+  apiGroup: ""

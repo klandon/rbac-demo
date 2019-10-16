@@ -1,37 +1,290 @@
-## Welcome to GitHub Pages
+## Welcome to The RBAC Demo
 
-You can use the [editor on GitHub](https://github.com/klandon/rbac-demo/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+### Purpose of the Demo
+RBAC = Role-based access control (RBAC) is a method of regulating access to computer or network resources based on the roles of individual users within an enterprise.
+      
+RBAC can be both intimidating and confusing all at the same time if you are new to kubernetes or RBAC in general. Think of RBAC as a way to map users to roles to permissions, sounds simple right? Well you will see in this demo it is ..
 
-### Markdown
+In this demo we will :
+- create a new namespace for our user
+- create a new user
+- a cert for that user leveraging the local CA
+- rbac role for that user 
+- testing the permissions for that user.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+### Items you will need to complete this demo
+- IDE or Text Editor (Recommend VSCode or Atom)
+- Docker Desktop Installed with Kubernetes Enabled
+- kubectl  
+- openssl 
+- basic knowledge of kubernetes is beneficial but not required
 
-```markdown
-Syntax highlighted code block
+### Before we get start lets check a few things that you need
+1. Verify kubectl is installed
+```
+~/github/rbac-demo  master ✗ system                                                                                                                                                                                                   18m ⚑ ✚ ◒  
+▶ kubectl version                                                          
+Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCommit:"e8462b5b5dc2584fdcd18e6bcfe9f1e4d970a529", GitTreeState:"clean", BuildDate:"2019-06-19T16:40:16Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"darwin/amd64"}
+Server Version: version.Info{Major:"1", Minor:"14", GitVersion:"v1.14.6", GitCommit:"96fac5cd13a5dc064f7d9f4f23030a6aeface6cc", GitTreeState:"clean", BuildDate:"2019-08-19T11:05:16Z", GoVersion:"go1.12.9", Compiler:"gc", Platform:"linux/amd64"}
+```
+2. Verify openssl is installed
+```
+~/github/rbac-demo  master ✗ system                                                                                                                                                                                                   19m ⚑ ✚ ◒  
+▶ openssl version                                                                                                                                                      
+LibreSSL 2.6.5
+```
+3. Verify you have access to your local kubernetes cluster
+```
+~/github/rbac-demo  master ✗ system                                                                                                                                                                                                   18m ⚑ ✚ ◒  
+▶ kubectl config get-contexts                  
+CURRENT   NAME                 CLUSTER          AUTHINFO         NAMESPACE
+*         docker-desktop       docker-desktop   docker-desktop   
+          docker-for-desktop   docker-desktop   docker-desktop   
 
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+~/github/rbac-demo  master ✗ system                                                                                                                                                                                                   18m ⚑ ✚ ◒  
+▶ kubectl get nodes                     
+NAME             STATUS   ROLES    AGE    VERSION
+docker-desktop   Ready    master   101s   v1.14.6
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+### Creating the new User (This is our test user we shall call him George)
 
-### Jekyll Themes
+First lets setup some local dirs to hold the certs and other items (I am running OSX so if running another os you commands may vary)
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/klandon/rbac-demo/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+- Create the directory for the user certs
+```
+~/github/rbac-demo  master ✗ system                                                                                                                                                                                                   14m ⚑ ✚ ◒  
+▶ mkdir .certs
+```
+- Create the directory for the CA certs
+```
+~/github/rbac-demo  master ✗ system                                                                                                                                                                                                   14m ⚑ ✚ ◒  
+▶ mkdir .ca_certs
+```
+- Create the user private key (we will use this and the private cert in the next step to give the user access to the cluster)
+```
+github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              20m ⚑ ✚ ◒  
+▶ openssl genrsa -out george.key 2048   
 
-### Support or Contact
+Generating RSA private key, 2048 bit long modulus
+.............................................+++
+...........................................+++
+e is 65537 (0x10001)
+```
+- create the user cert (the CN should be the name of the user and O would be the name of your awesome company)
+```
+github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              20m ⚑ ✚ ◒  
+▶ openssl req -new -key george.key -out george.csr -subj "/CN=george/O=tiddlywigs"  
+```
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+- Getting the CA Key for you local kubernetes instance (you will need this and the crt to sign the user)
+```
+github/rbac-demo/.ca_certs  master ✗ system                                                                                                                                                                                          24m ⚑ ✚ ◒  ⍉
+▶ kubectl cp kube-apiserver-docker-desktop:run/config/pki/ca.key -n kube-system ca.key       
+```
+- Getting the CA Cert for you local kubernetes instance
+```
+github/rbac-demo/.ca_certs  master ✗ system                                                                                                                                                                                           25m ⚑ ✚ ◒  
+▶ kubectl cp kube-apiserver-docker-desktop:run/config/pki/ca.crt -n kube-system ca.crt
+```
+
+- Signing the user cert with the CA
+```
+github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                             28m ⚑ ✚ ◒  ⍉
+▶ openssl x509 -req -in george.csr -CA ../.ca_certs/ca.crt -CAkey ../.ca_certs/ca.key -CAcreateserial -out george.crt -days 500
+
+Signature ok
+subject=/CN=george/O=tiddlywigs
+Getting CA Private Key
+```
+
+Congradulations you have now create a new user and signed the cert, next will we will set the context in the kube config and see what access we have.
+
+### Setting the kube config
+
+Setting the kube config "~/.kube/conig" is where kubectl looks by default for contexts. Context specify how and who is tring to access the cluster.
+More information here [Config](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)
+
+- Lets check out the current contexts  and you should see something similiar to the following the asterick marks the current in use context
+```
+github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              28m ⚑ ✚ ◒  
+▶ kubectl config get-contexts                                                         
+CURRENT   NAME                 CLUSTER          AUTHINFO         NAMESPACE
+*         docker-desktop       docker-desktop   docker-desktop   
+          docker-for-desktop   docker-desktop   docker-desktop
+```
+- Lets add george to the config
+```
+github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              32m ⚑ ✚ ◒  
+▶ kubectl config set-credentials george --client-certificate=george.crt  --client-key=george.key                                                  
+
+User "george" set.
+```
+- Now lets set george to point to a certain cluster in this case docker-desktop
+```
+github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              33m ⚑ ✚ ◒  
+▶ kubectl config set-context rbac-demo --cluster=docker-desktop  --user=george                     
+Context "rbac-demo" created.
+```
+- At this point george is in the config and has a set context to point the docker-desktop cluster but we are still active on the old context, lets change that
+```
+github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              35m ⚑ ✚ ◒  
+▶ kubectl config use-context rbac-demo                                        
+Switched to context "rbac-demo".
+
+github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              36m ⚑ ✚ ◒  
+▶ kubectl config get-contexts         
+CURRENT   NAME                 CLUSTER          AUTHINFO         NAMESPACE
+          docker-desktop       docker-desktop   docker-desktop   
+          docker-for-desktop   docker-desktop   docker-desktop   
+*         rbac-demo            docker-desktop   george  
+```
+- lets see what access george has at this time
+```
+github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              36m ⚑ ✚ ◒  
+▶ kubectl get pods                    
+Error from server (Forbidden): pods is forbidden: User "george" cannot list resource "pods" in API group "" in the namespace "default"
+
+github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                             38m ⚑ ✚ ◒  ⍉
+▶ kubectl get nodes
+Error from server (Forbidden): nodes is forbidden: User "george" cannot list resource "nodes" in API group "" at the cluster scope
+```
+
+You can see george can authenticate to the cluster but doesn have permssions to do anything not even read, this is where RBAC comes in.
+
+### RBAC Readonly
+
+George wants to read / view items in the cluster and we feel that he should so how do we do that. Well RBAC is the solution, with RBAC we can assign permissions to George by leveraging Roles and Role Binding to give him the access we want.
+
+Files need for this exercise:
+- rbac-readonly/role.yaml
+- rbac-readonly/role_binding.yaml
+- rbac-fullperms/role_binding.yaml
+
+
+- we first need to switch back to a context that has access to create roles and bindings
+```
+github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                       47m ⚑ ✚ ◒  
+▶ kubectl config use-context docker-desktop    
+Switched to context "docker-desktop".
+
+github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                       47m ⚑ ✚ ◒  
+▶ kubectl config get-contexts              
+CURRENT   NAME                 CLUSTER          AUTHINFO         NAMESPACE
+*         docker-desktop       docker-desktop   docker-desktop   
+          docker-for-desktop   docker-desktop   docker-desktop   
+          rbac-demo            docker-desktop   george  
+```
+
+- now we can apply the role.yaml file
+```
+github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                       47m ⚑ ✚ ◒  
+▶ kubectl apply -f role.yaml                   
+role.rbac.authorization.k8s.io/readonly created
+```
+
+- and then the binding to bind the user to the role
+```
+github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                       48m ⚑ ✚ ◒  
+▶ kubectl apply -f role_binding.yaml 
+rolebinding.rbac.authorization.k8s.io/readonly-role-binding created
+```
+
+- lets switch back to george and see what happens now
+```
+github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                      49m ⚑ ✚ ◒  ⍉
+▶ kubectl config use-context rbac-demo
+Switched to context "rbac-demo".
+
+github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                       49m ⚑ ✚ ◒  
+▶ kubectl get pods                    
+No resources found.
+
+github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                       50m ⚑ ✚ ◒  
+▶ kubectl get nodes
+Error from server (Forbidden): nodes is forbidden: User "george" cannot list resource "nodes" in API group "" at the cluster scope
+
+github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                      50m ⚑ ✚ ◒  ⍉
+▶ kubectl get pods --all-namespaces   
+Error from server (Forbidden): pods is forbidden: User "george" cannot list resource "pods" in API group "" at the cluster scope
+```
+Great george can see pods if there were any in the default namespace but not nodes and pods across all namespaces why? Nodes and the term "--all-namespaces" are cluster scoped  and we have created a role, Roles and ClusterRoles are not the same, we will cover Cluster Roles later
+
+Lets see if George can deploy the the default namespace a simple hello world app.
+```
+github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                      1h3m ⚑ ✚ ◒  
+▶ kubectl create deployment --image nginx my-nginx
+Error from server (Forbidden): deployments.apps is forbidden: User "george" cannot create resource "deployments" in API group "apps" in the namespace "default"
+```
+Well thats no good I want george to deploy that app, but maybe not in the default namespace as it is bad practice so lets create a new space for george to do his deployment.
+
+### RBAC Full Permissions
+
+- yet again lets switch back a user that has the access we need for creating objects
+```
+github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                     1h3m ⚑ ✚ ◒  ⍉
+▶ kubectl config use-context docker-desktop       
+Switched to context "docker-desktop".
+```
+- now we need to create a new namespace for george to do his deployments , lets call it georges-awesome-app
+```
+github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                      1h5m ⚑ ✚ ◒  
+▶ kubectl create namespace georges-awesome-app    
+namespace/georges-awesome-app created
+```
+- before we switch back to george we need to ensure that we give george a role that can deploy to that namespace but since we want george to own this namespace lets give him full permissions on it.
+```
+github/rbac-demo/rbac-fullperms  master ✗ system                                                                                                                                                                                     1h9m ⚑ ✚ ◒  
+▶ kubectl apply -f role.yaml                  
+role.rbac.authorization.k8s.io/fullperms created
+```
+
+- now we bind that role to george
+```
+github/rbac-demo/rbac-fullperms  master ✗ system                                                                                                                                                                                    1h10m ⚑ ✚ ◒  
+▶ kubectl apply -f role_binding.yaml                 
+rolebinding.rbac.authorization.k8s.io/fullperms-role-binding created
+```
+
+- lets switch back to george
+```
+github/rbac-demo/rbac-fullperms  master ✗ system                                                                                                                                                                                   1h12m ⚑ ✚ ◒  ⍉
+▶ kubectl config use-context rbac-demo
+Switched to context "rbac-demo".
+```
+- lets see if we can atleast read the namespace first
+```
+github/rbac-demo/rbac-fullperms  master ✗ system                                                                                                                                                                                    1h17m ⚑ ✚ ◒  
+▶ kubectl get pods --namespace georges-awesome-app
+No resources found.
+```
+- now its time to try the deployment
+```
+github/rbac-demo/rbac-fullperms  master ✗ system                                                                                                                                                                                    1h17m ⚑ ✚ ◒  
+▶ kubectl create deployment --image nginx my-nginx --namespace georges-awesome-app
+deployment.apps/my-nginx created
+
+github/rbac-demo/rbac-fullperms  master ✗ system                                                                                                                                                                                    1h18m ⚑ ✚ ◒  
+▶ kubectl get pods --namespace georges-awesome-app                                
+NAME                        READY   STATUS    RESTARTS   AGE
+my-nginx-5d998f947f-twxmr   1/1     Running   0          6s
+```
+
+GREAT! George can now deploy to his own namespace but did we take away his access to default to read?
+```
+github/rbac-demo/rbac-fullperms  master ✗ system                                                                                                                                                                                    1h18m ⚑ ✚ ◒  
+▶ kubectl get pods                                
+No resources found.
+```
+No we didnt? but why? Well in short we create two roles that George can assume, one that has read in default namespace but one in the "georges-awesome-app" namespace that he has full permissions on even delete.
+```
+github/rbac-demo/rbac-fullperms  master ✗ system                                                                                                                                                                                    1h19m ⚑ ✚ ◒  
+▶ kubectl delete deployment my-nginx --namespace georges-awesome-app
+deployment.extensions "my-nginx" deleted
+```
+
+## Outside links for reference
+[RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
+
+

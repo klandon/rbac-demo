@@ -1,0 +1,13 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: readonly-role-binding
+  namespace: default
+subjects:
+  - kind: User
+    name: george
+    apiGroup: ""
+roleRef:
+  kind: Role
+  name: readonly
+  apiGroup: ""
