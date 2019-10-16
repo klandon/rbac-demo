@@ -13,3 +13,4 @@
 
 *.cert/
 *.ca_certs/
+*.idea/
