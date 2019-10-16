@@ -38,8 +38,8 @@
         <entry file="file://$PROJECT_DIR$/README.md">
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
             <state split_layout="SPLIT">
-              <first_editor relative-caret-position="75">
-                <caret line="26" selection-start-line="26" selection-end-line="26" />
+              <first_editor relative-caret-position="668">
+                <caret line="337" column="23" selection-start-line="337" selection-start-column="23" selection-end-line="337" selection-end-column="23" />
               </first_editor>
               <second_editor />
             </state>
@@ -84,16 +84,6 @@
             <path>
               <item name="rbac-demo" type="b2602c69:ProjectViewProjectNode" />
               <item name="rbac-demo" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="rbac-demo" type="b2602c69:ProjectViewProjectNode" />
-              <item name="rbac-demo" type="462c0819:PsiDirectoryNode" />
-              <item name="rbac-fullperms" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="rbac-demo" type="b2602c69:ProjectViewProjectNode" />
-              <item name="rbac-demo" type="462c0819:PsiDirectoryNode" />
-              <item name="rbac-readonly" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -144,12 +134,12 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1571255392468</updated>
-      <workItem from="1571255395011" duration="4826000" />
+      <workItem from="1571255395011" duration="5027000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="4826000" />
+    <option name="totallyTimeSpent" value="5027000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="2237" y="-372" width="1815" height="990" extended-state="0" />
@@ -220,8 +210,8 @@
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
-          <first_editor relative-caret-position="75">
-            <caret line="26" selection-start-line="26" selection-end-line="26" />
+          <first_editor relative-caret-position="668">
+            <caret line="337" column="23" selection-start-line="337" selection-start-column="23" selection-end-line="337" selection-end-column="23" />
           </first_editor>
           <second_editor />
         </state>

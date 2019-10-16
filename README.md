@@ -1,7 +1,11 @@
 ## Welcome to The RBAC Demo
 
+### Sections of this Demo
+- Basic Role 
+- Cluster Role 
+- Terraform Automation 
 
-### Purpose of the Demo
+## Purpose of the Demo
 RBAC = Role-based access control (RBAC) is a method of regulating access to computer or network resources based on the roles of individual users within an enterprise.
       
 RBAC can be both intimidating and confusing all at the same time if you are new to kubernetes or RBAC in general. Think of RBAC as a way to map users to roles to permissions, sounds simple right? Well you will see in this demo it is ..
@@ -13,14 +17,14 @@ In this demo we will :
 - rbac role for that user 
 - testing the permissions for that user.
 
-### Items you will need to complete this demo
+## Items you will need to complete this demo
 - IDE or Text Editor (Recommend VSCode or Atom)
 - Docker Desktop Installed with Kubernetes Enabled
 - kubectl  
 - openssl 
 - basic knowledge of kubernetes is beneficial but not required
 
-### Before we get start lets check a few things that you need
+## Before we get start lets check a few things that you need
 
 - Verify kubectl is installed
 
@@ -53,6 +57,8 @@ CURRENT   NAME                 CLUSTER          AUTHINFO         NAMESPACE
 NAME             STATUS   ROLES    AGE    VERSION
 docker-desktop   Ready    master   101s   v1.14.6
 ```
+
+## Basic Role
 
 ### Creating the new User (This is our test user we shall call him George)
 
@@ -327,6 +333,9 @@ github/rbac-demo/rbac-fullperms  master ✗ system                              
 ▶ kubectl delete deployment my-nginx --namespace georges-awesome-app
 deployment.extensions "my-nginx" deleted
 ```
+## Cluster Role
+
+## Terraform Automation
 
 ## Outside links for reference
 [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
