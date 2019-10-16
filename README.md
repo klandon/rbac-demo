@@ -31,7 +31,7 @@ LibreSSL 2.6.5                         <-- Output from the command
 - openssl 
 - basic knowledge of kubernetes is beneficial but not required
 
-## Before we get start lets check a few things that you need
+## Before we get start, check a few things that you need
 
 - Verify kubectl is installed
 
@@ -135,7 +135,7 @@ Congradulations you have now create a new user and signed the cert, next will we
 Setting the kube config "~/.kube/conig" is where kubectl looks by default for contexts. Context specify how and who is tring to access the cluster.
 More information here [Config](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)
 
-- Lets check out the current contexts  and you should see something similiar to the following the asterick marks the current in use context
+- We need to check out the current contexts  and you should see something similar to the following the asterisk marks the current in use context
 
 ```
 github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              28m ⚑ ✚ ◒  
@@ -145,7 +145,7 @@ CURRENT   NAME                 CLUSTER          AUTHINFO         NAMESPACE
           docker-for-desktop   docker-desktop   docker-desktop
 ```
 
-- Lets add george to the config
+- Now add george to the config
 
 ```
 github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              32m ⚑ ✚ ◒  
@@ -154,7 +154,7 @@ github/rbac-demo/.certs  master ✗ system                                      
 User "george" set.
 ```
 
-- Now lets set george to point to a certain cluster in this case docker-desktop
+- Set george to point to a certain cluster in this case docker-desktop
 
 ```
 github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              33m ⚑ ✚ ◒  
@@ -162,7 +162,7 @@ github/rbac-demo/.certs  master ✗ system                                      
 Context "rbac-demo" created.
 ```
 
-- At this point george is in the config and has a set context to point the docker-desktop cluster but we are still active on the old context, lets change that
+- At this point george is in the config and has a set context to point the docker-desktop cluster but we are still active on the old context, change that
 
 ```
 github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              35m ⚑ ✚ ◒  
@@ -177,7 +177,7 @@ CURRENT   NAME                 CLUSTER          AUTHINFO         NAMESPACE
 *         rbac-demo            docker-desktop   george  
 ```
 
-- lets see what access george has at this time
+- What access george has at this time?
 
 ```
 github/rbac-demo/.certs  master ✗ system                                                                                                                                                                                              36m ⚑ ✚ ◒  
@@ -232,7 +232,7 @@ github/rbac-demo/rbac-readonly  master ✗ system                               
 rolebinding.rbac.authorization.k8s.io/readonly-role-binding created
 ```
 
-- lets switch back to george and see what happens now
+- switch back to george and see what happens now
 
 ```
 github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                      49m ⚑ ✚ ◒  ⍉
@@ -254,7 +254,7 @@ Error from server (Forbidden): pods is forbidden: User "george" cannot list reso
 
 Great george can see pods if there were any in the default namespace but not nodes and pods across all namespaces why? Nodes and the term "--all-namespaces" are cluster scoped  and we have created a role, Roles and ClusterRoles are not the same, we will cover Cluster Roles later
 
-Lets see if George can deploy the the default namespace a simple hello world app.
+see if George can deploy the the default namespace a simple hello world app.
 
 ```
 github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                      1h3m ⚑ ✚ ◒  
@@ -262,11 +262,11 @@ github/rbac-demo/rbac-readonly  master ✗ system                               
 Error from server (Forbidden): deployments.apps is forbidden: User "george" cannot create resource "deployments" in API group "apps" in the namespace "default"
 ```
 
-Well thats no good I want george to deploy that app, but maybe not in the default namespace as it is bad practice so lets create a new space for george to do his deployment.
+Well thats no good I want george to deploy that app, but maybe not in the default namespace as it is bad practice so create a new space for george to do his deployment.
 
 ### RBAC Full Permissions
 
-- yet again lets switch back a user that has the access we need for creating objects
+- yet again switch back to a user that has the access we need for creating objects
 
 ```
 github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                     1h3m ⚑ ✚ ◒  ⍉
@@ -274,7 +274,7 @@ github/rbac-demo/rbac-readonly  master ✗ system                               
 Switched to context "docker-desktop".
 ```
 
-- now we need to create a new namespace for george to do his deployments , lets call it georges-awesome-app
+- now we need to create a new namespace for george to do his deployments , call it georges-awesome-app
 
 ```
 github/rbac-demo/rbac-readonly  master ✗ system                                                                                                                                                                                      1h5m ⚑ ✚ ◒  
@@ -282,7 +282,7 @@ github/rbac-demo/rbac-readonly  master ✗ system                               
 namespace/georges-awesome-app created
 ```
 
-- before we switch back to george we need to ensure that we give george a role that can deploy to that namespace but since we want george to own this namespace lets give him full permissions on it.
+- before we switch back to george we need to ensure that we give george a role that can deploy to that namespace but since we want george to own this namespace we will give him full permissions on it.
 
 ```
 github/rbac-demo/rbac-fullperms  master ✗ system                                                                                                                                                                                     1h9m ⚑ ✚ ◒  
@@ -298,14 +298,14 @@ github/rbac-demo/rbac-fullperms  master ✗ system                              
 rolebinding.rbac.authorization.k8s.io/fullperms-role-binding created
 ```
 
-- lets switch back to george
+- switch back to george
 
 ```
 github/rbac-demo/rbac-fullperms  master ✗ system                                                                                                                                                                                   1h12m ⚑ ✚ ◒  ⍉
 ▶ kubectl config use-context rbac-demo
 Switched to context "rbac-demo".
 ```
-- lets see if we can atleast read the namespace first
+- see if we can at least read the namespace first
 
 ```
 github/rbac-demo/rbac-fullperms  master ✗ system                                                                                                                                                                                    1h17m ⚑ ✚ ◒  
@@ -343,7 +343,7 @@ deployment.extensions "my-nginx" deleted
 
 ### Explaining the files
 
-First lets make a note that RBAC is inclusive and not exclusive. In English means you can not say all but this, you can only say just this..
+First make a note that RBAC is inclusive and not exclusive. In English means you can not say all but this, you can only say just this..
 
 Role YAML
 ```
